@@ -7,4 +7,9 @@ module.exports = defineConfig([
   {
     ignores: ['dist/*'],
   },
+  {
+    // React Three Fiber JSX (<mesh geometry=…>) uses three.js props that this rule doesn't know.
+    files: ['src/three/**/*.tsx'],
+    rules: { 'react/no-unknown-property': 'off' },
+  },
 ]);

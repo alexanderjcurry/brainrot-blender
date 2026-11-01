@@ -2,11 +2,10 @@ import { StatusBar } from 'expo-status-bar';
 import * as Speech from 'expo-speech';
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { AppState, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { IngredientArt } from './src/components/Art';
-import { Board } from './src/components/Board';
 import { DiscoveryOverlay, OfflineOverlay, Toast } from './src/components/Overlays';
 import { RotDex, Shop } from './src/components/Screens';
 import { colors } from './src/components/theme';
+import { BoardScene } from './src/three/BoardScene';
 import { ANIMALS } from './src/game/content';
 import { CreatureId, getCreature, parseCreatureId } from './src/game/creatures';
 import { localDateKey } from './src/game/rng';
@@ -38,6 +37,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('board');
   const [selected, setSelected] = useState<number | null>(null);
   const [now, setNow] = useState(0);
+  const [blendCount, setBlendCount] = useState(0);
   const latest = useRef(state);
   useEffect(() => {
     latest.current = state;
@@ -107,65 +107,64 @@ export default function App() {
               {dailyDone ? (
                 <Text style={styles.dailyText}>Daily Blend found! A new secret drops tomorrow.</Text>
               ) : (
-                <>
-                  <IngredientArt id={dailyAnimal.id} size={34} />
-                  <Text style={styles.dailyText}>
-                    <Text style={styles.dailyStrong}>Daily Blend: </Text>
-                    {dailyAnimal.label} + something secret. Find it for +{formatAura(dailyBonus(state.board))} Aura
-                  </Text>
-                </>
+                <Text style={styles.dailyText}>
+                  <Text style={styles.dailyStrong}>Daily Blend: </Text>
+                  {dailyAnimal.label} + something secret. Find it for +{formatAura(dailyBonus(state.board))} Aura
+                </Text>
               )}
             </View>
 
-            <Board
+            <BoardScene
               board={state.board}
               selected={selected}
+              blendCount={blendCount}
               onSelect={setSelected}
               onDrop={onDrop}
               onSell={onSell}
-              renderControls={(sellRef, sellActive) => (
-                <View style={styles.controls}>
-                  <Pressable
-                    ref={sellRef}
-                    testID="sell-bin"
-                    onPress={() => {
-                      if (selected !== null) {
-                        onSell(selected);
-                        setSelected(null);
-                      }
-                    }}
-                    style={[styles.sell, sellActive && styles.sellActive]}
-                  >
-                    <Text style={styles.sellText}>SELL</Text>
-                    <Text style={styles.sellHint}>drop here</Text>
-                  </Pressable>
-
-                  <Pressable
-                    testID="blend-button"
-                    onPress={() => dispatch({ type: 'BLEND', now: Date.now(), roll1: Math.random(), roll2: Math.random(), roll3: Math.random() })}
-                    style={({ pressed }) => [styles.blender, pressed && { transform: [{ scale: 0.95 }] }]}
-                  >
-                    <Text style={styles.blenderText}>BLEND</Text>
-                    <Text style={styles.blenderCount}>
-                      {state.charges}/{max}
-                    </Text>
-                    <View style={styles.progressTrack}>
-                      <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                    </View>
-                  </Pressable>
-
-                  <Pressable testID="refill-button" onPress={() => dispatch({ type: 'AD_REFILL', now: Date.now() })} style={styles.adButton}>
-                    <Text style={styles.adText}>REFILL</Text>
-                    <Text style={styles.adHint}>watch ad</Text>
-                  </Pressable>
-                </View>
-              )}
             />
+
+            <View style={styles.controls}>
+              <Pressable
+                testID="sell-button"
+                onPress={() => {
+                  if (selected !== null) {
+                    onSell(selected);
+                    setSelected(null);
+                  }
+                }}
+                style={[styles.sell, selected !== null && styles.sellActive]}
+              >
+                <Text style={styles.sellText}>SELL</Text>
+                <Text style={styles.sellHint}>{selected !== null ? 'selected' : 'or drag to red'}</Text>
+              </Pressable>
+
+              <Pressable
+                testID="blend-button"
+                onPress={() => {
+                  if (state.charges > 0 && state.board.some((c) => !c)) setBlendCount((n) => n + 1);
+                  dispatch({ type: 'BLEND', now: Date.now(), roll1: Math.random(), roll2: Math.random(), roll3: Math.random() });
+                }}
+                style={({ pressed }) => [styles.blender, pressed && { transform: [{ scale: 0.95 }] }]}
+              >
+                <Text style={styles.blenderText}>BLEND</Text>
+                <Text style={styles.blenderCount}>
+                  {state.charges}/{max}
+                </Text>
+                <View style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+                </View>
+              </Pressable>
+
+              <Pressable testID="refill-button" onPress={() => dispatch({ type: 'AD_REFILL', now: Date.now() })} style={styles.adButton}>
+                <Text style={styles.adText}>REFILL</Text>
+                <Text style={styles.adHint}>watch ad</Text>
+              </Pressable>
+            </View>
             <Text style={styles.hint}>
               {state.stats.fusions === 0
-                ? 'Drag the animal onto the toaster to blend your first brainrot!'
+                ? 'Drag the pigeon onto the toaster to blend your first brainrot!'
                 : selected !== null
-                  ? 'Now tap where it should go.'
+                  ? 'Now tap where it should go, or tap SELL.'
                   : 'Animal + object = new brainrot. Two identical brainrots = level up.'}
             </Text>
           </View>
@@ -294,7 +293,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 4,
+    marginTop: 8,
     gap: 10,
   },
   sell: {
@@ -369,7 +368,8 @@ const styles = StyleSheet.create({
   hint: {
     color: colors.muted,
     textAlign: 'center',
-    marginTop: 10,
+    marginTop: 8,
+    marginBottom: 4,
     fontSize: 13,
   },
   tabs: {

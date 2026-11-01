@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { CreatureId, creatureIncome, getCreature } from '../game/creatures';
 import { discoveryBonus, formatAura } from '../game/state';
-import { CreatureArt } from './Art';
+import { CreatureViewer } from '../three/CreatureViewer';
 import { colors } from './theme';
 
 export function Button({
@@ -57,7 +57,7 @@ export function DiscoveryOverlay({ id, onSpeak, onClose }: { id: CreatureId; onS
       <View style={[styles.card, { borderColor: c.rarity.color }]}>
         <Text style={styles.kicker}>NEW BRAINROT DISCOVERED</Text>
         <Animated.View style={{ transform: [{ scale }, { rotate }] }}>
-          <CreatureArt id={id} size={210} />
+          <CreatureViewer id={id} size={230} />
         </Animated.View>
         <Text style={styles.name}>{c.name}</Text>
         <View style={[styles.pill, { backgroundColor: c.rarity.color }]}>

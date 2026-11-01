@@ -10,18 +10,30 @@ import {
   maxCharges,
   speedCost,
 } from '../game/state';
-import { CreatureArt, MysteryArt } from './Art';
+import { CreatureViewer } from '../three/CreatureViewer';
 import { Button } from './Overlays';
 import { colors } from './theme';
 
 export function RotDex({ state, onSpeak }: { state: GameState; onSpeak: (id: CreatureId) => void }) {
-  const found = ALL_CREATURES.filter((id) => state.discovered[id]).length;
+  const found = ALL_CREATURES.filter((id) => state.discovered[id]);
+  const newest = [...found].sort((a, b) => (state.discovered[b] ?? 0) - (state.discovered[a] ?? 0))[0];
+  const [picked, setPicked] = useState<CreatureId | null>(null);
+  const shown = picked ?? newest ?? ALL_CREATURES[0];
+  const shownKnown = !!state.discovered[shown];
+  const c = getCreature(shown);
   return (
     <ScrollView contentContainerStyle={styles.scroll}>
       <Text style={styles.title}>Rot-dex</Text>
       <Text style={styles.subtitle}>
-        {found} of {ALL_CREATURES.length} brainrots discovered. Tap one to hear its name.
+        {found.length} of {ALL_CREATURES.length} brainrots discovered. Tap one to see it and hear its name.
       </Text>
+      <View style={[styles.viewerCard, { borderColor: shownKnown ? c.rarity.color : colors.panelBorder }]}>
+        <CreatureViewer id={shown} size={230} hidden={!shownKnown} />
+        <Text style={styles.viewerName}>{shownKnown ? c.name : '???'}</Text>
+        <Text style={[styles.dexRarity, { color: shownKnown ? c.rarity.color : colors.muted }]}>
+          {shownKnown ? `${c.rarity.label} · ${formatAura(creatureIncome(shown, 1))} Aura/sec` : 'Not discovered yet'}
+        </Text>
+      </View>
       {SETS.map((set) => {
         const ids = ALL_CREATURES.filter((id) => creatureSet(id) === set.id);
         const owned = state.sets.includes(set.id);
@@ -34,23 +46,24 @@ export function RotDex({ state, onSpeak }: { state: GameState; onSpeak: (id: Cre
             {!owned && <Text style={styles.lockedNote}>Unlock this set in Upgrades to find these.</Text>}
             <View style={[styles.dexGrid, !owned && { opacity: 0.45 }]}>
               {ids.map((id) => {
-                const c = getCreature(id);
+                const cr = getCreature(id);
                 const known = !!state.discovered[id];
                 return (
                   <Pressable
                     key={id}
-                    onPress={() => known && onSpeak(id)}
-                    style={[styles.dexCard, { borderColor: known ? c.rarity.color : colors.panelBorder }]}
+                    onPress={() => {
+                      setPicked(id);
+                      if (known) onSpeak(id);
+                    }}
+                    style={[
+                      styles.dexChip,
+                      { borderColor: id === shown ? colors.lime : known ? cr.rarity.color : colors.panelBorder },
+                    ]}
                   >
-                    {known ? <CreatureArt id={id} size={84} /> : <MysteryArt size={84} />}
-                    <Text style={styles.dexName} numberOfLines={2}>
-                      {known ? c.name : '???'}
+                    <View style={[styles.dexDot, { backgroundColor: known ? cr.rarity.color : colors.panelBorder }]} />
+                    <Text style={[styles.dexName, !known && { color: colors.muted }]} numberOfLines={1}>
+                      {known ? cr.name : '???'}
                     </Text>
-                    {known && (
-                      <Text style={[styles.dexRarity, { color: c.rarity.color }]}>
-                        {c.rarity.label} · {formatAura(creatureIncome(id, 1))}/s
-                      </Text>
-                    )}
                   </Pressable>
                 );
               })}
@@ -229,27 +242,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: 10,
+    rowGap: 8,
   },
-  dexCard: {
-    width: '31.5%',
-    backgroundColor: colors.panel,
-    borderRadius: 16,
-    borderWidth: 2,
+  dexChip: {
+    width: '48.5%',
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    gap: 8,
+    backgroundColor: colors.panel,
+    borderRadius: 12,
+    borderWidth: 2,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+  },
+  dexDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   dexName: {
     color: colors.text,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
-    textAlign: 'center',
-    minHeight: 30,
+    flex: 1,
   },
   dexRarity: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '700',
+  },
+  viewerCard: {
+    alignItems: 'center',
+    backgroundColor: colors.panel,
+    borderRadius: 20,
+    borderWidth: 2,
+    paddingBottom: 14,
+    marginBottom: 6,
+  },
+  viewerName: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: '900',
+    textAlign: 'center',
   },
   shopRow: {
     flexDirection: 'row',
