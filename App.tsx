@@ -68,6 +68,21 @@ export default function App() {
     };
   }, [loaded]);
 
+  // Phone browsers (Safari especially) only let a page talk after a touch.
+  // Speak a silent word on the first touch so the narrator works from then on.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    const events = ['pointerup', 'touchend', 'click'] as const;
+    function unlock() {
+      const silent = new SpeechSynthesisUtterance(' ');
+      silent.volume = 0;
+      window.speechSynthesis.speak(silent);
+      events.forEach((type) => window.removeEventListener(type, unlock, true));
+    }
+    events.forEach((type) => window.addEventListener(type, unlock, true));
+    return () => events.forEach((type) => window.removeEventListener(type, unlock, true));
+  }, []);
+
   // Read each new discovery out loud.
   const reveal = state.reveals[0];
   useEffect(() => {

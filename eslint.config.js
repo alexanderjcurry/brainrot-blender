@@ -8,6 +8,11 @@ module.exports = defineConfig([
     ignores: ['dist/*'],
   },
   {
+    // Build scripts run in Node.
+    files: ['scripts/**/*.js'],
+    languageOptions: { globals: { __dirname: 'readonly' } },
+  },
+  {
     // React Three Fiber JSX (<mesh geometry=…>) uses three.js props that this rule doesn't know.
     files: ['src/three/**/*.tsx'],
     rules: { 'react/no-unknown-property': 'off' },

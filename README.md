@@ -7,6 +7,11 @@ creatures to level them up, and earn Aura every second, even while the app is cl
 
 Everything runs on the device. There is no server.
 
+**Play it now:** https://alexanderjcurry.github.io/brainrot-blender/ (works in Safari and
+Chrome on phones; use Share > Add to Home Screen for an app icon and full screen).
+Every push to `main` rebuilds and republishes that page through GitHub Actions
+(`.github/workflows/deploy-pages.yml`).
+
 ## Play it on your phone with Expo Go (Windows or Mac)
 
 1. Install **Node.js LTS** from https://nodejs.org (the default options are fine).
