@@ -1,25 +1,28 @@
 {
   "expo": {
-    "name": "brainrot-blender",
+    "name": "Brainrot Blender",
     "slug": "brainrot-blender",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.brainrotblender.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#140F2A",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.brainrotblender.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "backgroundColor": "#140F2A"
   }
 }

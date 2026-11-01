@@ -1,0 +1,17 @@
+export const colors = {
+  bg: '#140F2A',
+  panel: '#1F1840',
+  panelBorder: '#33296A',
+  cell: '#1D1640',
+  cellHover: '#3A2F70',
+  creatureTile: '#2A2150',
+  ingredientTile: '#1B2A4C',
+  ingredientBorder: '#3B4A75',
+  lime: '#A3E635',
+  pink: '#F472B6',
+  gold: '#FBBF24',
+  ink: '#140F2A',
+  text: '#FFFFFF',
+  muted: '#A39DC9',
+  danger: '#F87171',
+};
